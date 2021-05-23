@@ -22,11 +22,12 @@ services:
         env_file: .env/.local/.django
 
     celery_worker:
-        image: exec_web
-        working_dir: /code/server
-        command: celery -A config worker -l info -n worker@%h
+        image: simple-socialnetwork_web:latest
+        working_dir: /code/social_network
+        command: celery -A social_network worker -l info
         volumes:
             - .:/code
+            - local-shared-vol:/tmp/shared_volume
         depends_on:
             - db
             - redis
@@ -50,3 +51,4 @@ services:
 
 volumes:
     postgres_data:
+    local-shared-vol:
