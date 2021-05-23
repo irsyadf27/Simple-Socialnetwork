@@ -1,5 +1,6 @@
 import json
 from http import HTTPStatus
+
 import pytest
 
 
@@ -16,7 +17,7 @@ def request_body():
         "confirm_password": "testtest2",
         "email": "test@test.com",
         "first_name": "test",
-        "last_name": "test"
+        "last_name": "test",
     }
 
 

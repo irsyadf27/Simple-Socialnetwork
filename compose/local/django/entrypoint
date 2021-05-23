@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# This file takes care of setting the environment variables correctly
+ENV_FILE=/envs/.django
+
+echo "Hello, this is entrypoint:"
+
+[ ! -f $ENV_FILE ] &&
+    echo "ERROR: Config file $ENV_FILE missing! Django will fail to start" &&
+    (ls -lahR $(dirname "$ENV_FILE") ; sleep 100 ) && exit 1
+
+
+# 1. Save current environment to a file (to no overwrit with our settings)
+env > /tmp/env.variables
+
+# 2. Load our predefined variables (in export mode)
+set -a; . $ENV_FILE; set +a
+
+# 3. Restore values, in case were overwritten by 2
+. /tmp/env.variables
+rm /tmp/env.variables
+
+# 4. Print environment
+env|sort  # print the available variables
+
+# This will recieve parameters of the CMD command and run them with the correctly set env vars
+echo "Running CMD:"
+set -x
+exec "$@"

@@ -45,6 +45,7 @@ class CommentSerializer(serializers.ModelSerializer):
         validated_data["creator"] = self.context["request"].user
         return super().create(validated_data)
 
+
 class LikeSerializer(serializers.ModelSerializer):
     creator = serializers.SerializerMethodField()
 
@@ -63,8 +64,10 @@ class LikeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["creator"] = self.context["request"].user
 
-        liked = FeedLike.objects.filter(feed=validated_data["feed"], creator=validated_data["creator"])
+        liked = FeedLike.objects.filter(
+            feed=validated_data["feed"], creator=validated_data["creator"]
+        )
         if not liked.exists():
             return super().create(validated_data)
-        
+
         return liked.first()

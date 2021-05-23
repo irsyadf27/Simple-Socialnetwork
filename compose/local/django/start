@@ -1,0 +1,15 @@
+#!/bin/sh
+
+echo -e "\n[local] start script here: waiting for DB to be ready..." && sleep 3
+
+echo "Using DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE"
+
+while true; do
+    set -x
+    python3 social_network/manage.py migrate
+    python3 social_network/manage.py loaddata user
+    python3 social_network/manage.py runserver 0.0.0.0:8000
+    echo -e "\n(!) Server exited with RC=$?. Restarting after some wait..."
+    set +x
+    sleep 3  # wait before retrying
+done
