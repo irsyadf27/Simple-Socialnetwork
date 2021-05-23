@@ -1,17 +1,52 @@
 version: '3'
 
 services:
+    web:
+        build:
+            context: .
+            dockerfile: compose/local/django/Dockerfile
+        command: /start
+        volumes:
+            - .:/code
+        ports:
+            - '8000:8000'
+            - '8001:8001'
+        depends_on:
+            - db
+            - redis
+        links:
+            - db:db
+            - redis:redis
+        stdin_open: true
+        tty: true
+        env_file: .env/.local/.django
+
+    celery_worker:
+        image: exec_web
+        working_dir: /code/server
+        command: celery -A config worker -l info -n worker@%h
+        volumes:
+            - .:/code
+        depends_on:
+            - db
+            - redis
+            - web
+        links:
+            - db:db
+            - redis:redis
+        env_file: .env/.local/.django
+
     db:
-        container_name: socialnetwork_db
-        image: mariadb:10.4.13
+        image: 'postgres:10.3-alpine'
         restart: always
         ports:
-            - '3328:3306'
-        environment:
-            MYSQL_DATABASE: 'test_db'
-            MYSQL_ROOT_PASSWORD: 'THE_PASSWORD'
-        volumes:
-            - socialnetwork-db-datavolume:/var/lib/mysql
+            - '5432:5432'
+
+    redis:
+        image: 'redis:4.0-alpine'
+        command: 'redis-server --stop-writes-on-bgsave-error no'
+        ports:
+            - '6379:6379'
 
 volumes:
-    socialnetwork-db-datavolume:
+    postgres_data:

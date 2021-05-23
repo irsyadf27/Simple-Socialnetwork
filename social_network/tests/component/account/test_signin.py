@@ -1,7 +1,10 @@
 import json
 from http import HTTPStatus
 import pytest
+
+
 from account.models import Account
+
 
 @pytest.fixture(scope="module")
 def request_url():
@@ -16,17 +19,14 @@ def setup_account():
         first_name="test",
         last_name="test",
     )
-    
+
     user.set_password("testtest2")
     user.save()
 
 
 @pytest.fixture
 def request_body():
-    return {
-        "username": "test",
-        "password": "testtest2"
-    }
+    return {"username": "test", "password": "testtest2"}
 
 
 @pytest.mark.django_db
