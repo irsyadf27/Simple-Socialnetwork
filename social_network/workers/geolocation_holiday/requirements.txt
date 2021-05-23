@@ -1,3 +1,0 @@
-celery==5.0.5
-eventlet==0.30.2
-requests[security]==2.25.1

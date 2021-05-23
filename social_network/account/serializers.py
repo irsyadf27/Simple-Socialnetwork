@@ -1,65 +1,75 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Account
-from .task import geolocation_holiday
+
+
+from account.models import Account
+from social_network.celery import app as celery_app
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-
     @classmethod
     def get_token(cls, user):
         token = super(MyTokenObtainPairSerializer, cls).get_token(user)
 
-        token['username'] = user.username
+        token["username"] = user.username
         return token
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
-        validators=[UniqueValidator(queryset=Account.objects.all())]
+        validators=[UniqueValidator(queryset=Account.objects.all())],
     )
 
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password]
+    )
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = Account
-        fields = ('username', 'password', 'confirm_password', 'email', 'first_name', 'last_name')
-        extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True}
-        }
+        fields = (
+            "username",
+            "password",
+            "confirm_password",
+            "email",
+            "first_name",
+            "last_name",
+        )
 
-    def validate(self, attrs):
-        if attrs['first_name'] == '':
-            raise serializers.ValidationError({"first_name": "First name cannot blank."})
+    def validate(self, value):
+        if value.get("password") != value.get("confirm_password"):
+            raise serializers.ValidationError(
+                {"password": "Password fields didn't match."}
+            )
 
-        if attrs['last_name'] == '':
-            raise serializers.ValidationError({"last_name": "Last name cannot blank."})
-
-        if attrs['password'] != attrs['confirm_password']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-
-        return attrs
+        return value
 
     def create(self, validated_data):
         user = Account.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
-            registration_ip_address=self.request.META['REMOTE_ADDR']
+            username=validated_data["username"],
+            email=validated_data["email"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            registration_ip_address=self.request.META["REMOTE_ADDR"],
         )
-        
-        user.set_password(validated_data['password'])
+
+        user.set_password(validated_data["password"])
         user.save()
 
-        geolocation_holiday(user.id, user.registration_ip_address, user.date_joined)
+        celery_app.send_task(
+            "accounts.tasks.validate_geolocation_holiday",
+            kwargs={
+                "account_id": user.id,
+                "ip_address": user.registration_ip_address,
+                "date_joined": user.date_joined,
+            },
+        )
 
         return user
+
 
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:

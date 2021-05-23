@@ -1,64 +1,40 @@
-import base64
-import os
+from celery import shared_task
+from django.conf import settings
 
 import requests
-from datetime import datetime
-from celery import shared_task
-from requests import HTTPError
-from .models import Account
 
 
-class GeolocationException(Exception):
-    pass
-
-
-class GeolocationUpdateException(Exception):
-    pass
-
-
-class HolidayException(Exception):
-    pass
-
-
-class HolidayUpdateException(Exception):
-    pass
-
-
-class EmailException(Exception):
-    pass
+from account.models import Account
 
 
 @shared_task(
     retry_backoff=True,
     retry_kwargs={"max_retries": 5},
+    autoretry_for=(requests.exceptions.RequestException,),
 )
-def geolocation_holiday(account_id: int, ip: str, date_joined: datetime):
-    url = "https://ipgeolocation.abstractapi.com/v1/?api_key=d19303c099a24b09b5694dc493fe1788&ip_address={}".format(ip)
-    response = requests.get(url)
+def validate_geolocation_holiday(
+    account_id, registration_ip_address, date_joined
+):
+    """Validate geo location holiday."""
+    geo_location_url = "https://ipgeolocation.abstractapi.com/v1/?api_key={}&ip_address={}".format(
+        settings.ABSTRACT_API_KEY, registration_ip_address
+    )
 
-    try:
-        response.raise_for_status()   
-        response_json = response.json()     
-    except HTTPError:
-        raise GeolocationException()
+    location = requests.get(geo_location_url)
+    location.raise_for_status()
+    location = location.json()
 
-    try:
-        Account.objects.filter(id=account_id).update(country=response_json["country"])
-    except:
-        raise GeolocationUpdateException()
+    holiday_url = "https://holidays.abstractapi.com/v1/?api_key={}&country={}&year={}&month={}&day={}".format(
+        settings.ABSTRACT_API_KEY,
+        location.get("country_code", ""),
+        date_joined.year,
+        date_joined.month,
+        date_joined.day,
+    )
+    response = requests.get(holiday_url)
+    response.raise_for_status()
+    response = response.json()
 
-    url_holiday = "https://holidays.abstractapi.com/v1/?api_key=1bd958de6a404843b32f803f0d7dc0ad&country={}&year={}&month={}&day={}".format(response_json["country_code"], date_joined.year, date_joined.month, date_joined.day)
-    response_holiday = requests.get(url_holiday)
-    is_holiday = False
-
-    try:
-        response_holiday.raise_for_status()   
-        response_holiday_json = response_holiday.json()
-        is_holiday = len(response_holiday_json) > 0
-    except HTTPError:
-        raise GeolocationException()
-
-    try:
-        Account.objects.filter(id=account_id).update(is_holiday=is_holiday)
-    except:
-        raise GeolocationUpdateException
+    Account.objects.filter(id=account_id).update(
+        country=location.get("country"), is_holiday=bool(len(response) > 0)
+    )

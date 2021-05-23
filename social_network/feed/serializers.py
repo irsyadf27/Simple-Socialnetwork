@@ -1,10 +1,12 @@
 from rest_framework import serializers
-from .models import FeedPost, FeedComment, FeedLike
+
+
+from feed.models import FeedComment, FeedLike, FeedPost
 
 
 class PostSerializer(serializers.ModelSerializer):
     creator = serializers.SerializerMethodField()
-    like = serializers.SerializerMethodField()
+    likes = serializers.SerializerMethodField()
 
     class Meta:
         model = FeedPost
@@ -18,7 +20,7 @@ class PostSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         return obj.creator.get_full_name()
 
-    def get_like(self, obj):
+    def get_likes(self, obj):
         return FeedLike.objects.filter(feed=obj).count()
 
     def create(self, validated_data):
@@ -61,13 +63,15 @@ class LikeSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         return obj.creator.get_full_name()
 
+    def validate(self, data):
+        is_liked = FeedLike.objects.filter(
+            feed=data.get("feed"), creator=data.get("creator")
+        ).exists()
+        if is_liked:
+            raise serializers.ValidationError("You already liked this feed")
+
+        return data
+
     def create(self, validated_data):
         validated_data["creator"] = self.context["request"].user
-
-        liked = FeedLike.objects.filter(
-            feed=validated_data["feed"], creator=validated_data["creator"]
-        )
-        if not liked.exists():
-            return super().create(validated_data)
-
-        return liked.first()
+        return super().create(validated_data)
