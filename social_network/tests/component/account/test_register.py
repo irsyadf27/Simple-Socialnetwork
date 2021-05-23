@@ -136,39 +136,3 @@ def test_invalid_email(api_client, request_url, request_body):
     response_dict = json.loads(response.content)
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-@pytest.mark.django_db
-def test_without_first_name(api_client, request_url, request_body):
-    del request_body["first_name"]
-    response = api_client.post(request_url, data=request_body)
-    response_dict = json.loads(response.content)
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-@pytest.mark.django_db
-def test_blank_first_name(api_client, request_url, request_body):
-    request_body["first_name"] = ""
-    response = api_client.post(request_url, data=request_body)
-    response_dict = json.loads(response.content)
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-@pytest.mark.django_db
-def test_without_last_name(api_client, request_url, request_body):
-    del request_body["last_name"]
-    response = api_client.post(request_url, data=request_body)
-    response_dict = json.loads(response.content)
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-@pytest.mark.django_db
-def test_blank_last_name(api_client, request_url, request_body):
-    request_body["last_name"] = ""
-    response = api_client.post(request_url, data=request_body)
-    response_dict = json.loads(response.content)
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST

@@ -31,7 +31,7 @@ class FeedComment(BaseFeed):
         ordering = ['-created_at']
 
 class FeedLike(BaseFeed):
-    feed = models.ForeignKey(FeedPost, on_delete=models.CASCADE)
+    post = models.ForeignKey(FeedPost, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ("feed", "creator")
+        unique_together = ("post", "creator")

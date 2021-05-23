@@ -24,6 +24,12 @@ class RegisterView(CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
+    def get_serializer_context(self):
+        context = super(RegisterView, self).get_serializer_context()
+        context.update({
+            "request": self.request
+        })
+        return context
 
 class AccountDetailDetail(APIView):
     def get_object(self, pk):

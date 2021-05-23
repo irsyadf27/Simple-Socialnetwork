@@ -4,12 +4,12 @@ import pytest
 from django.utils import timezone
 
 from account.models import Account
-from feed.models import FeedPost, FeedComment
+from feed.models import FeedPost, FeedLike
 
 
 @pytest.fixture(scope="module")
 def request_url():
-    return "/api/feed/comment/1/"
+    return "/api/feed/feed/1/unlike/"
 
 
 @pytest.fixture(autouse=True)
@@ -50,22 +50,19 @@ def setup_feed():
         created_at=timezone.now()
     )
 
-    comment1 = FeedComment.objects.create(
+    FeedLike.objects.create(
         id=1,
-        post=post1,
         creator=user1,
-        comment="Test Comment 1",
-        created_at=timezone.now()
-    )
-
-    comment2 = FeedComment.objects.create(
-        id=2,
         post=post1,
-        creator=user2,
-        comment="Test Comment 2",
         created_at=timezone.now()
     )
 
+    FeedLike.objects.create(
+        id=2,
+        creator=user2,
+        post=post1,
+        created_at=timezone.now()
+    )
 
 @pytest.fixture
 def auth_user1():
@@ -81,36 +78,13 @@ def auth_user2():
 def test_success(api_client, request_url, auth_user1):
     api_client.force_authenticate(user=auth_user1)
 
-    response = api_client.get(request_url)
-    response_dict = json.loads(response.content)
+    response = api_client.post(request_url)
 
-    assert response.status_code == HTTPStatus.OK
-
-
-@pytest.mark.django_db
-def test_not_found(api_client, request_url, auth_user1):
-    api_client.force_authenticate(user=auth_user1)
-
-    response = api_client.get("/api/feed/comment/222/")
-
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.NO_CONTENT
 
 
 @pytest.mark.django_db
-def test_view_another_post(api_client, request_url, auth_user1):
-    api_client.force_authenticate(user=auth_user1)
+def test_unauthorized(api_client, request_url, auth_user1):
+    response = api_client.post(request_url)
 
-    response = api_client.get("/api/feed/comment/2/")
-
-    assert response.status_code == HTTPStatus.OK
-
-
-@pytest.mark.django_db
-def test_get_comments(api_client, request_url, auth_user1):
-    api_client.force_authenticate(user=auth_user1)
-
-    response = api_client.get("/api/feed/feed/1/comments/")
-    response_dict = json.loads(response.content)
-
-    assert response.status_code == HTTPStatus.OK
-    assert len(response_dict) == 2
+    assert response.status_code == HTTPStatus.UNAUTHORIZED

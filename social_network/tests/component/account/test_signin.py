@@ -8,7 +8,7 @@ from account.models import Account
 
 @pytest.fixture(scope="module")
 def request_url():
-    return "/api/account/login/"
+    return "/api/account/auth-token/"
 
 
 @pytest.fixture(autouse=True)
@@ -33,7 +33,7 @@ def request_body():
 def test_success(api_client, request_url, request_body):
     response = api_client.post(request_url, data=request_body)
     response_dict = json.loads(response.content)
-
+    
     assert response.status_code == HTTPStatus.OK
     assert "access" in response_dict
 

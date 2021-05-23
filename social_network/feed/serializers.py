@@ -18,10 +18,13 @@ class PostSerializer(serializers.ModelSerializer):
         ]
 
     def get_creator(self, obj):
+        if obj.creator.get_full_name() == "":
+            return obj.creator.username
+
         return obj.creator.get_full_name()
 
     def get_likes(self, obj):
-        return FeedLike.objects.filter(feed=obj).count()
+        return FeedLike.objects.filter(post=obj).count()
 
     def create(self, validated_data):
         validated_data["creator"] = self.context["request"].user
@@ -41,6 +44,9 @@ class CommentSerializer(serializers.ModelSerializer):
         ]
 
     def get_creator(self, obj):
+        if obj.creator.get_full_name() == "":
+            return obj.creator.username
+
         return obj.creator.get_full_name()
 
     def create(self, validated_data):
@@ -61,14 +67,17 @@ class LikeSerializer(serializers.ModelSerializer):
         ]
 
     def get_creator(self, obj):
+        if obj.creator.get_full_name() == "":
+            return obj.creator.username
+
         return obj.creator.get_full_name()
 
     def validate(self, data):
         is_liked = FeedLike.objects.filter(
-            feed=data.get("feed"), creator=data.get("creator")
+            post_id=data.get("post"), creator=self.context["request"].user
         ).exists()
         if is_liked:
-            raise serializers.ValidationError("You already liked this feed")
+            raise serializers.ValidationError("You already liked this post")
 
         return data
 

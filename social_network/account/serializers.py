@@ -5,7 +5,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 from account.models import Account
-from social_network.celery import app as celery_app
+from social_network.celery_app import app as celery_app
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -49,14 +49,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = Account.objects.create(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
-            registration_ip_address=self.request.META["REMOTE_ADDR"],
+            username=validated_data.get("username"),
+            email=validated_data.get("email"),
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+            registration_ip_address=self.context["request"].META["REMOTE_ADDR"],
         )
 
-        user.set_password(validated_data["password"])
+        user.set_password(validated_data.get("password"))
         user.save()
 
         celery_app.send_task(
