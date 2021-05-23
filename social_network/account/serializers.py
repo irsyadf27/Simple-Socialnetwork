@@ -2,6 +2,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import Account
+from .tasks import geolocation_holiday
 
 
 from account.models import Account
@@ -49,11 +51,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = Account.objects.create(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
-            registration_ip_address=self.request.META["REMOTE_ADDR"],
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            registration_ip_address=self.request.META['REMOTE_ADDR']
         )
 
         user.set_password(validated_data["password"])

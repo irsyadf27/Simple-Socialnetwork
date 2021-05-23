@@ -1,7 +1,5 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-
-
 from feed.models import FeedComment, FeedLike, FeedPost
 from feed.permissions import FeedPermission
 from feed.serializers import CommentSerializer, LikeSerializer, PostSerializer
@@ -35,4 +33,4 @@ class LikeViewSet(viewsets.ModelViewSet):
 
     queryset = FeedLike.objects.all()
     serializer_class = LikeSerializer
-    http_method_names = ["post", "delete"]
+    http_method_names = ['post', 'delete']

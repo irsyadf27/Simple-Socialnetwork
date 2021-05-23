@@ -1,4 +1,4 @@
-from socialnetwork.settings import *
+from social_network.settings import *
 
 DATABASES = {
     "default": {
