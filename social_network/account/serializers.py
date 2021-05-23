@@ -3,7 +3,7 @@ from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Account
-from .task import geolocation_holiday
+from .tasks import geolocation_holiday
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -50,7 +50,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
+            last_name=validated_data['last_name'],
             registration_ip_address=self.request.META['REMOTE_ADDR']
         )
         
