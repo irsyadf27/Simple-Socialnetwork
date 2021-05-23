@@ -21,6 +21,7 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
+
 class AccountDetailDetail(APIView):
     def get_object(self, pk):
         try:
