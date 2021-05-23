@@ -1,4 +1,4 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from feed.models import FeedComment, FeedLike, FeedPost
 from feed.permissions import FeedPermission
@@ -15,7 +15,6 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
 
 
-
 class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (
         IsAuthenticated,
@@ -24,7 +23,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     queryset = FeedComment.objects.all()
     serializer_class = CommentSerializer
-
 
 
 class LikeViewSet(viewsets.ModelViewSet):

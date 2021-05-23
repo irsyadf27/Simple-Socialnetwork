@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from datetime import timedelta
-from distutils.util import strtobool
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -188,4 +187,7 @@ SWAGGER_SETTINGS = {
     },
 }
 
-ENABLE_SWAGGER = int(strtobool(os.getenv("ENABLE_SWAGGER", "1")))
+ENABLE_SWAGGER = True
+ABSTRACT_API_KEY = os.environ.get(
+    "ABSTRACT_API_KEY", "AbstractAPIKey.Not.Defined"
+)

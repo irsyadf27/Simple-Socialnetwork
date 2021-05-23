@@ -1,26 +1,25 @@
 from django.http import Http404
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, status
-from rest_framework.views import APIView
+from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import (
+
+
+from account.serializers import (
     MyTokenObtainPairSerializer,
     RegisterSerializer,
     AccountSerializer,
 )
-from .models import Account
+from account.models import Account
 
 
-# Create your views here.
 class MyObtainTokenPairView(TokenObtainPairView):
     permission_classes = (AllowAny,)
     serializer_class = MyTokenObtainPairSerializer
 
 
-class RegisterView(generics.CreateAPIView):
+class RegisterView(CreateAPIView):
     queryset = Account.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
