@@ -1,17 +1,14 @@
-from django.http import Http404
-from rest_framework.generics import CreateAPIView
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 
+from account.models import Account
 from account.serializers import (
     MyTokenObtainPairSerializer,
     RegisterSerializer,
     AccountSerializer,
 )
-from account.models import Account
 
 
 class MyObtainTokenPairView(TokenObtainPairView):
@@ -26,19 +23,10 @@ class RegisterView(CreateAPIView):
 
     def get_serializer_context(self):
         context = super(RegisterView, self).get_serializer_context()
-        context.update({
-            "request": self.request
-        })
+        context.update({"request": self.request})
         return context
 
-class AccountDetailDetail(APIView):
-    def get_object(self, pk):
-        try:
-            return Account.objects.get(pk=pk)
-        except Account.DoesNotExist:
-            raise Http404
 
-    def get(self, request, pk, format=None):
-        account = self.get_object(pk)
-        serializer = AccountSerializer(account)
-        return Response(serializer.data)
+class AccountDetailDetail(RetrieveAPIView):
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer

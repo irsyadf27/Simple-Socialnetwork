@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -18,6 +19,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True,
+        validators=[UniqueValidator(queryset=Account.objects.all())],
+    )
     email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=Account.objects.all())],
@@ -31,6 +36,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = (
+            "id",
             "username",
             "password",
             "confirm_password",
@@ -48,23 +54,32 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        registration_ip_address = self.context["request"].META.get(
+            "REMOTE_ADDR"
+        )
         user = Account.objects.create(
             username=validated_data.get("username"),
             email=validated_data.get("email"),
             first_name=validated_data.get("first_name", ""),
             last_name=validated_data.get("last_name", ""),
-            registration_ip_address=self.context["request"].META["REMOTE_ADDR"],
+            registration_ip_address=registration_ip_address
+            if registration_ip_address not in settings.LOCAL_IP_ADDRESSES
+            else "",
         )
 
         user.set_password(validated_data.get("password"))
         user.save()
 
         celery_app.send_task(
-            "accounts.tasks.validate_geolocation_holiday",
+            "account.tasks.validate_geolocation_holiday",
             kwargs={
                 "account_id": user.id,
-                "ip_address": user.registration_ip_address,
-                "date_joined": user.date_joined,
+                "registration_ip_address": user.registration_ip_address,
+                "date_joined": [
+                    user.date_joined.year,
+                    user.date_joined.month,
+                    user.date_joined.day,
+                ],
             },
         )
 

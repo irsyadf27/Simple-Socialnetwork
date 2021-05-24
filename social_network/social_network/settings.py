@@ -188,8 +188,16 @@ SWAGGER_SETTINGS = {
 }
 
 ENABLE_SWAGGER = True
-ABSTRACT_API_KEY = os.environ.get(
-    "ABSTRACT_API_KEY", "AbstractAPIKey.Not.Defined"
+
+ABSTRACT_BASE_URL = "abstractapi.com/v1/"
+ABSTRACT_GEO_LOCATION_URL = f"https://ipgeolocation.{ABSTRACT_BASE_URL}"
+ABSTRACT_HOLIDAY_URL = f"https://holidays.{ABSTRACT_BASE_URL}"
+
+ABSTRACT_GEO_LOCATION_API_KEY = os.environ.get(
+    "ABSTRACT_GEO_LOCATION_API_KEY", "AbstractGeoLocationAPIKey.Not.Defined"
+)
+ABSTRACT_HOLIDAY_API_KEY = os.environ.get(
+    "ABSTRACT_HOLIDAY_API_KEY", "AbstractHolidayAPIKey.Not.Defined"
 )
 
 CELERY_BROKER_URL = "redis://redis:6379"
@@ -197,3 +205,6 @@ CELERY_RESULT_BACKEND = "redis://redis:6379"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+
+LOCAL_IP_ADDRESSES = ["127.0.01", "172.22.0.1"]

@@ -39,6 +39,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = [
             "id",
+            "post",
             "created_at",
             "creator",
         ]
@@ -59,7 +60,9 @@ class LikeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FeedLike
-        fields = "__all__"
+        exclude = [
+            "post",
+        ]
         read_only_fields = [
             "id",
             "created_at",
@@ -74,7 +77,7 @@ class LikeSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         is_liked = FeedLike.objects.filter(
-            post_id=data.get("post"), creator=self.context["request"].user
+            post=self.context["post"], creator=self.context["request"].user
         ).exists()
         if is_liked:
             raise serializers.ValidationError("You already liked this post")

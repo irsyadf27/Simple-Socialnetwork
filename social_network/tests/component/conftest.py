@@ -18,7 +18,7 @@ def create_user():
         first_name="User",
         last_name="1",
     )
-    
+
     user.set_password("testtest123")
     user.save()
 
